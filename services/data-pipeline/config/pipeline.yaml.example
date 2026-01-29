@@ -1,0 +1,92 @@
+# Pipeline Configuration Example
+# Copy this file to pipeline.yaml and customize as needed
+
+name: product-pipeline
+description: Load products from CSV to all stores
+mode: original  # 'original' or 'enrich'
+
+# Input settings
+csv_path: /app/data/products.csv
+# parquet_path: /app/data/products.parquet  # Use instead of csv_path for parquet files
+product_count: null  # null for all products, or specify a number
+offset: 0
+
+# Stage configurations
+stages:
+  # Extract stage - reads from CSV/Parquet
+  extract:
+    enabled: true
+    batch_size: 100
+    timeout_seconds: 300
+    file_type: auto  # csv, parquet, or auto (detect from extension)
+    chunk_size: 10000
+    encoding: utf-8
+
+  # Clean stage - normalizes and validates data
+  clean:
+    enabled: true
+    batch_size: 100
+    build_chunks: true  # Build child chunks (only used in enrich mode)
+    min_title_length: 5
+    max_title_length: 500
+
+  # Embed stage - generates vector embeddings
+  embed:
+    enabled: true
+    batch_size: 50
+    timeout_seconds: 600
+    model: bge-large  # Options: bge-large (768d), mxbai-embed-large (1024d), bge-large (1024d)
+    # dimensions: 768  # Auto-detected from model if not specified
+
+  # LLM Extract stage - generates GenAI fields (enrich mode only)
+  llm_extract:
+    enabled: true
+    batch_size: 10
+    timeout_seconds: 600
+    model: llama3.2:3b  # Options: llama3.2:3b, llama3.2:1b, qwen2.5:7b, mistral:7b
+    temperature: 0.3
+    max_tokens: 1000
+
+  # PostgreSQL load stage
+  load_postgres:
+    enabled: true
+    batch_size: 500
+    timeout_seconds: 300
+    use_copy: true  # Use COPY protocol for faster bulk inserts
+
+  # Qdrant load stage
+  load_qdrant:
+    enabled: true
+    batch_size: 500
+    timeout_seconds: 300
+    indexing_strategy: parent_only  # Options: parent_only, enrich_existing, add_child_node, full_replace
+    wait_for_index: true
+
+  # Elasticsearch load stage
+  load_elasticsearch:
+    enabled: true
+    batch_size: 500
+    timeout_seconds: 300
+    refresh_interval: "-1"  # Disable refresh during bulk load for better performance
+    refresh_after_load: true
+
+# Checkpoint settings - enables pipeline resume on failure
+checkpoint:
+  enabled: true
+  checkpoint_interval: 1000  # Save checkpoint every N products
+  redis_prefix: "pipeline:checkpoint:"
+  ttl_hours: 24  # How long to keep checkpoints
+
+# Job queue settings - for background job processing
+job_queue:
+  enabled: true
+  redis_stream: "pipeline:jobs"
+  consumer_group: "pipeline-workers"
+  max_concurrent_jobs: 2
+  job_timeout_seconds: 3600  # 1 hour max per job
+  retry_failed_jobs: true
+  max_retries: 3
+
+# Global settings
+log_level: INFO  # DEBUG, INFO, WARNING, ERROR
+dry_run: false  # Set to true to validate without executing

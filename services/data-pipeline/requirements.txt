@@ -1,0 +1,51 @@
+# Requirements for running data-pipeline service
+# Install with: pip install -r requirements.txt
+
+# =============================================================================
+# Web Framework
+# =============================================================================
+fastapi>=0.109.0                # FastAPI web framework
+uvicorn[standard]>=0.27.0       # ASGI server
+python-multipart>=0.0.6         # File upload support
+
+# =============================================================================
+# Core Dependencies
+# =============================================================================
+click>=8.1.0                    # CLI interface for all scripts
+structlog>=24.1.0               # Structured logging
+pydantic>=2.5.0                 # Data validation
+pydantic-settings>=2.1.0        # Settings management
+python-dotenv>=1.0.0            # Environment variable loading
+
+# =============================================================================
+# Data Processing
+# =============================================================================
+pandas>=2.1.0                   # DataFrames and CSV handling
+polars>=0.20.0                  # Fast DataFrames (preferred for large files)
+numpy>=1.26.0                   # Numerical operations
+pyarrow>=14.0.0                 # Parquet file support
+tqdm>=4.66.0                    # Progress bars
+
+# =============================================================================
+# Web Scraping (for enrich mode)
+# =============================================================================
+httpx>=0.26.0                   # Async HTTP client
+aiofiles>=23.2.0                # Async file operations
+beautifulsoup4>=4.12.0          # HTML parsing
+lxml>=5.0.0                     # Fast XML/HTML parser
+fake-useragent>=1.4.0           # User agent rotation
+playwright>=1.40.0              # Browser automation for scraping
+markdownify>=0.11.0             # HTML to Markdown conversion
+
+# =============================================================================
+# Database Clients
+# =============================================================================
+asyncpg>=0.29.0                 # Async PostgreSQL client
+qdrant-client>=1.7.0            # Qdrant vector store client
+elasticsearch[async]>=8.12.0    # Elasticsearch client with async support
+redis>=7.1.0                    # Redis client for job queue
+
+# =============================================================================
+# Utilities
+# =============================================================================
+tenacity>=8.2.0                 # Retry logic

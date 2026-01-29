@@ -1,0 +1,301 @@
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: pis-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_MAX_LOADED_MODELS=5
+    volumes:
+      - ${OLLAMA_DATA_PATH:-ollama_data}:/root/.ollama
+    restart: unless-stopped
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: all
+#              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 0"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    container_name: pis-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pis_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pis_password}
+      POSTGRES_DB: ${POSTGRES_DB:-product_intelligence}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${POSTGRES_DATA_PATH:-postgres_data}:/var/lib/postgresql/data
+      - ./infrastructure/schemas/postgresql:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pis_user} -d ${POSTGRES_DB:-product_intelligence}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: pis-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ${QDRANT_DATA_PATH:-qdrant_data}:/qdrant/storage
+      - ./infrastructure/configs/qdrant:/qdrant/config:ro
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: pis-elasticsearch
+    logging:
+      driver: "none"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: pis-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ${REDIS_DATA_PATH:-redis_data}:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pis-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # Application Services
+  # =============================================================================
+
+  ollama-service:
+    build:
+      context: ./services/ollama-service
+      dockerfile: Dockerfile
+    container_name: pis-ollama-service
+    ports:
+      - "8010:8010"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEFAULT_EMBEDDING_MODEL=${EMBEDDING_MODEL:-bge-large}
+    volumes:
+      - ./services/ollama-service/src:/app/src
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # vector-store:
+  #   build:
+  #     context: ./services/vector-store
+  #     dockerfile: Dockerfile
+  #   container_name: pis-vector-store
+  #   ports:
+  #     - "8002:8002"
+  #   environment:
+  #     - QDRANT_HOST=qdrant
+  #     - QDRANT_PORT=6333
+  #     - ELASTICSEARCH_HOST=elasticsearch
+  #     - ELASTICSEARCH_PORT=9200
+  #     - POSTGRES_HOST=postgres
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_USER=${POSTGRES_USER:-pis_user}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pis_password}
+  #     - POSTGRES_DB=${POSTGRES_DB:-product_intelligence}
+  #     - OLLAMA_SERVICE_URL=http://ollama-service:8010
+  #     - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  #   volumes:
+  #     - ./services/vector-store/src:/app/src
+  #   depends_on:
+  #     qdrant:
+  #       condition: service_healthy
+  #     elasticsearch:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #     ollama-service:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  multi-agent:
+    build:
+      context: ./services/multi-agents
+      dockerfile: Dockerfile
+    container_name: pis-multi-agent
+    ports:
+      - "8001:8001"
+    environment:
+      - VECTOR_STORE_URL=http://vector-store:8002
+      - OLLAMA_SERVICE_URL=http://ollama-service:8010
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-pis_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pis_password}
+      - POSTGRES_DB=${POSTGRES_DB:-product_intelligence}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./services/multi-agents/src:/app/src
+    depends_on:
+      # vector-store:
+      #   condition: service_healthy
+      ollama-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  data-pipeline:
+    build:
+      context: ./services/data-pipeline
+      dockerfile: Dockerfile
+    container_name: pis-data-pipeline
+    ports:
+      - "8005:8005"
+    environment:
+      - OLLAMA_SERVICE_URL=http://ollama-service:8010
+      - VECTOR_STORE_URL=http://vector-store:8002
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-pis_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pis_password}
+      - POSTGRES_DB=${POSTGRES_DB:-product_intelligence}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Ollama model configuration
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-bge-large}
+      - LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.3}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-1000}
+      - EMBEDDING_BATCH_SIZE=${EMBEDDING_BATCH_SIZE:-50}
+    volumes:
+      - ./services/data-pipeline/src:/app/src
+      - ${DATA_PATH:-./data}:/app/data
+    depends_on:
+      ollama-service:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: pis-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - MULTI_AGENT_URL=http://multi-agent:8001
+      - DATA_PIPELINE_URL=http://data-pipeline:8005
+    volumes:
+      - ./services/frontend:/app
+    depends_on:
+      multi-agent:
+        condition: service_healthy
+      data-pipeline:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama_data:
+  postgres_data:
+  qdrant_data:
+  elasticsearch_data:
+  redis_data:
+  pgadmin_data:
+
+networks:
+  default:
+    name: pis-network

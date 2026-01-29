@@ -1,0 +1,372 @@
+/* Product Intelligence System - Clean White UI */
+
+/* =============================================================================
+   Force Light Theme & White Backgrounds
+   ============================================================================= */
+
+/* Force light theme on root */
+:root {
+    color-scheme: light;
+}
+
+/* Main app background */
+.stApp {
+    background-color: #ffffff !important;
+}
+
+.main {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stAppViewContainer"] {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stHeader"] {
+    background-color: #ffffff !important;
+}
+
+/* Hide Streamlit branding */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { visibility: hidden; }
+
+/* =============================================================================
+   Sidebar - Clean White
+   ============================================================================= */
+
+[data-testid="stSidebar"] {
+    background-color: #f8f9fa !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    background-color: #f8f9fa !important;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #f8f9fa !important;
+}
+
+/* =============================================================================
+   Text Inputs - White Background
+   ============================================================================= */
+
+/* All input fields */
+input, textarea, select {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #3b82f6 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Streamlit text input */
+.stTextInput > div > div {
+    background-color: #ffffff !important;
+}
+
+.stTextInput > div > div > input {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* Streamlit text area */
+.stTextArea > div > div {
+    background-color: #ffffff !important;
+}
+
+.stTextArea > div > div > textarea {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* Streamlit number input */
+.stNumberInput > div > div {
+    background-color: #ffffff !important;
+}
+
+.stNumberInput > div > div > input {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* Streamlit select box */
+.stSelectbox > div > div {
+    background-color: #ffffff !important;
+}
+
+.stSelectbox > div > div > div {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* =============================================================================
+   Chat Interface - White Background
+   ============================================================================= */
+
+/* Chat input container */
+[data-testid="stChatInput"] {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stChatInput"] > div {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Chat messages */
+[data-testid="stChatMessage"] {
+    background-color: #ffffff !important;
+}
+
+.stChatMessage {
+    background-color: #ffffff !important;
+}
+
+/* User message */
+[data-testid="stChatMessageContent"] {
+    background-color: #f3f4f6 !important;
+    color: #1f2937 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.stButton > button {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
+    border: 1px solid #d1d5db !important;
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+.stButton > button:hover {
+    background-color: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+}
+
+.stButton > button[kind="primary"],
+.stButton > button[data-testid="baseButton-primary"] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.stButton > button[kind="primary"]:hover,
+.stButton > button[data-testid="baseButton-primary"]:hover {
+    background-color: #2563eb !important;
+}
+
+/* =============================================================================
+   Containers & Cards
+   ============================================================================= */
+
+/* Expander */
+[data-testid="stExpander"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+}
+
+.streamlit-expanderHeader {
+    background-color: #f9fafb !important;
+    color: #1f2937 !important;
+}
+
+/* Metric */
+[data-testid="stMetric"] {
+    background-color: #f9fafb !important;
+    padding: 16px !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #1f2937 !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #6b7280 !important;
+}
+
+/* =============================================================================
+   Data Display
+   ============================================================================= */
+
+/* DataFrame */
+[data-testid="stDataFrame"] {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stDataFrame"] > div {
+    background-color: #ffffff !important;
+}
+
+/* Table */
+.stDataFrame table {
+    background-color: #ffffff !important;
+}
+
+.stDataFrame th {
+    background-color: #f3f4f6 !important;
+    color: #1f2937 !important;
+}
+
+.stDataFrame td {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* =============================================================================
+   Alerts & Messages
+   ============================================================================= */
+
+.stAlert {
+    border-radius: 8px !important;
+}
+
+[data-testid="stAlert"] {
+    background-color: #f0f9ff !important;
+}
+
+/* Success */
+.stSuccess, [data-baseweb="notification"][kind="positive"] {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+}
+
+/* Error */
+.stError, [data-baseweb="notification"][kind="negative"] {
+    background-color: #fef2f2 !important;
+    color: #991b1b !important;
+}
+
+/* Info */
+.stInfo, [data-baseweb="notification"][kind="info"] {
+    background-color: #eff6ff !important;
+    color: #1e40af !important;
+}
+
+/* Warning */
+.stWarning, [data-baseweb="notification"][kind="warning"] {
+    background-color: #fffbeb !important;
+    color: #92400e !important;
+}
+
+/* =============================================================================
+   Radio & Checkbox
+   ============================================================================= */
+
+.stRadio > div {
+    background-color: transparent !important;
+}
+
+.stRadio label {
+    color: #1f2937 !important;
+}
+
+.stCheckbox label {
+    color: #1f2937 !important;
+}
+
+/* =============================================================================
+   Markdown & Text
+   ============================================================================= */
+
+.stMarkdown {
+    color: #1f2937 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #1f2937 !important;
+}
+
+p {
+    color: #374151 !important;
+}
+
+/* Caption */
+.stCaption, [data-testid="stCaptionContainer"] {
+    color: #6b7280 !important;
+}
+
+/* =============================================================================
+   Divider
+   ============================================================================= */
+
+hr, [data-testid="stDivider"] {
+    border-color: #e5e7eb !important;
+}
+
+/* =============================================================================
+   Spinner
+   ============================================================================= */
+
+.stSpinner > div {
+    border-top-color: #3b82f6 !important;
+}
+
+/* =============================================================================
+   Tabs
+   ============================================================================= */
+
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #f3f4f6 !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: transparent !important;
+    color: #6b7280 !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* =============================================================================
+   Scrollbar
+   ============================================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* =============================================================================
+   Image
+   ============================================================================= */
+
+[data-testid="stImage"] {
+    background-color: #f9fafb !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+}
